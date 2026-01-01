@@ -71,3 +71,15 @@ def test_cli_limit():
 def test_cli_context_lines():
     """CLI includes context lines around matches with -C/--context."""
     pass
+
+
+@pytest.mark.skip(reason="Not implemented")
+def test_cli_langs_output():
+    """CLI prints available language filter values."""
+    pass
+
+
+@pytest.mark.skip(reason="Not implemented")
+def test_cli_matched_repos():
+    """CLI prints deduplicated matched repositories."""
+    pass

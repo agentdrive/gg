@@ -1,5 +1,5 @@
-use clap::Parser;
-use grepapp::{GrepAppClient, LineMatch, SearchOptions, SearchQuery};
+use clap::{Parser, Subcommand};
+use grepapp::{GrepAppClient, LineMatch, SearchOptions, SearchQuery, languages};
 use serde::Serialize;
 use std::cmp::Ordering;
 use std::io::{self, IsTerminal};
@@ -12,8 +12,11 @@ const MATCH_END: &str = "\u{1b}[0m";
 #[derive(Parser, Debug)]
 #[command(name = "gg", version, about = "Grep GitHub via grep.app", long_about = None)]
 struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+
     /// Pattern to search for
-    pattern: String,
+    pattern: Option<String>,
 
     /// Treat pattern as a regular expression
     #[arg(short = 'r', long = "regex", conflicts_with = "word_regexp")]
@@ -35,12 +38,12 @@ struct Cli {
     #[arg(long = "path")]
     path: Option<String>,
 
-    /// Filter by language (repeat or comma-separated)
+    /// Filter by language (repeat or comma-separated). Common values: TypeScript, JavaScript, Python, Rust, C++, C, Zig, C#, JSX, TSX, Swift. Use `gg langs` for the full list.
     #[arg(long = "lang", value_delimiter = ',')]
     languages: Vec<String>,
 
     /// Maximum number of pages to fetch (10 results per page, hard cap 100)
-    #[arg(long = "max-pages", default_value_t = 10)]
+    #[arg(long = "max-pages", default_value_t = 1)]
     max_pages: u32,
 
     /// Maximum concurrent requests
@@ -52,8 +55,12 @@ struct Cli {
     timeout_secs: u64,
 
     /// Emit JSON objects per output line
-    #[arg(long = "json")]
+    #[arg(long = "json", conflicts_with_all = ["matched_repos", "flat"])]
     json: bool,
+
+    /// Emit unique repository names that contain matches
+    #[arg(long = "matched-repos", conflicts_with_all = ["json", "flat"])]
+    matched_repos: bool,
 
     /// Include N lines of context around matches (limited to snippet lines)
     #[arg(short = 'C', long = "context", default_value_t = 0)]
@@ -67,13 +74,23 @@ struct Cli {
     #[arg(long = "no-color")]
     no_color: bool,
 
-    /// Group results by repo and file
-    #[arg(long = "heading")]
+    /// Group results by repo and file (default).
+    #[arg(long = "heading", default_value_t = true)]
     heading: bool,
+
+    /// Disable grouped output (flat repo/path:line:content)
+    #[arg(long = "flat", conflicts_with_all = ["json", "matched_repos"])]
+    flat: bool,
 
     /// Override API base URL (for tests)
     #[arg(long = "base-url", default_value = "https://grep.app", hide = true)]
     base_url: String,
+}
+
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Print available language filter values
+    Langs,
 }
 
 #[derive(Debug)]
@@ -102,7 +119,27 @@ struct JsonRecord {
 async fn main() {
     let cli = Cli::parse();
 
-    let query = build_query(&cli);
+    if let Some(command) = &cli.command {
+        match command {
+            Command::Langs => {
+                if let Err(err) = print_languages() {
+                    eprintln!("gg: {err}");
+                    process::exit(2);
+                }
+                return;
+            }
+        }
+    }
+
+    let pattern = match cli.pattern.as_deref() {
+        Some(pattern) => pattern,
+        None => {
+            eprintln!("gg: missing search pattern");
+            process::exit(2);
+        }
+    };
+
+    let query = build_query(&cli, pattern);
     let options = SearchOptions::default()
         .max_pages(cli.max_pages)
         .concurrency(cli.concurrency)
@@ -126,6 +163,17 @@ async fn main() {
         }
     };
 
+    if cli.matched_repos {
+        let repos = result.matched_repos();
+        if repos.is_empty() {
+            return;
+        }
+        for repo in repos {
+            println!("{repo}");
+        }
+        return;
+    }
+
     let mut records = collect_records(result.hits, cli.context);
     records.sort_by(|a, b| match a.repo.cmp(&b.repo) {
         Ordering::Equal => match a.path.cmp(&b.path) {
@@ -144,15 +192,16 @@ async fn main() {
     }
 
     let use_color = !cli.no_color && io::stdout().is_terminal();
-    if cli.heading {
+    let grouped = cli.heading && !cli.flat;
+    if grouped {
         emit_grouped(records, use_color);
     } else {
         emit_flat(records, use_color);
     }
 }
 
-fn build_query(cli: &Cli) -> SearchQuery {
-    let mut query = SearchQuery::new(&cli.pattern)
+fn build_query(cli: &Cli, pattern: &str) -> SearchQuery {
+    let mut query = SearchQuery::new(pattern)
         .regex(cli.regex)
         .whole_words(cli.word_regexp)
         .case_sensitive(!cli.ignore_case);
@@ -292,4 +341,12 @@ fn render_line(record: &MatchRecord, start: &str, end: &str) -> String {
         match_ranges: record.match_ranges.clone(),
     };
     line_match.highlight(start, end)
+}
+
+fn print_languages() -> Result<(), grepapp::GrepAppError> {
+    let langs = languages()?;
+    for lang in langs {
+        println!("{lang}");
+    }
+    Ok(())
 }
