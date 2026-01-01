@@ -15,7 +15,7 @@ Provide a Rust SDK and a `gg` CLI that use the public `https://grep.app/api/sear
 1. The SDK exposes a `GrepAppClient` and `SearchQuery` that can build query parameters for pattern, regex, whole-words, case sensitivity, repo/path filters, and language filters.
 2. The SDK parses API JSON into structured results with `repo`, `path`, `branch`, and `LineMatch` entries, including line numbers and match ranges.
 3. The SDK supports concurrent fetching across multiple pages with a configurable `max_pages` and `concurrency` option.
-4. The CLI accepts a positional pattern and prints matches in `repo/path:line:content` format by default.
+4. The CLI accepts a positional pattern and prints matches grouped by repo/file by default (use `--flat` for legacy `repo/path:line:content` format).
 5. The CLI supports `--json` output with one JSON object per matched line.
 6. The CLI respects `--no-color` by avoiding ANSI highlighting, and defaults to color when stdout is a TTY.
 7. The CLI respects `--max-pages` and stops at that boundary even if more results are available.
@@ -24,6 +24,9 @@ Provide a Rust SDK and a `gg` CLI that use the public `https://grep.app/api/sear
 10. The CLI handles zero results by printing nothing and exiting successfully.
 11. The CLI supports `--limit` to cap the number of output lines (matches + context).
 12. The CLI supports `-C/--context` to include N lines of context around matches (limited to snippet lines).
+13. The CLI supports `gg langs` to list available language filter values.
+14. The CLI supports `--matched-repos` to return deduplicated repositories containing matches.
+15. The SDK exposes the language list for programmatic use.
 
 ## Error Handling
 
@@ -50,3 +53,5 @@ Provide a Rust SDK and a `gg` CLI that use the public `https://grep.app/api/sear
 10. `test_cli_zero_results`
 11. `test_cli_limit`
 12. `test_cli_context_lines`
+13. `test_cli_langs_output`
+14. `test_cli_matched_repos`

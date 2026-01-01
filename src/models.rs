@@ -54,6 +54,15 @@ pub struct SearchResult {
     pub hits: Vec<SearchHit>,
 }
 
+impl SearchResult {
+    pub fn matched_repos(&self) -> Vec<String> {
+        let mut repos: Vec<String> = self.hits.iter().map(|hit| hit.repo.clone()).collect();
+        repos.sort();
+        repos.dedup();
+        repos
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SearchPage {
     pub page: u32,
@@ -97,5 +106,52 @@ impl LineMatch {
             out.push_str(&self.line[cursor..]);
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{LineMatch, SearchHit, SearchResult};
+
+    #[test]
+    fn matched_repos_returns_sorted_deduped_list() {
+        let hits = vec![
+            SearchHit {
+                repo: "b/repo".to_string(),
+                path: "src/lib.rs".to_string(),
+                branch: "main".to_string(),
+                total_matches: 1,
+                lines: Vec::new(),
+            },
+            SearchHit {
+                repo: "a/repo".to_string(),
+                path: "README.md".to_string(),
+                branch: "main".to_string(),
+                total_matches: 2,
+                lines: Vec::new(),
+            },
+            SearchHit {
+                repo: "b/repo".to_string(),
+                path: "src/main.rs".to_string(),
+                branch: "main".to_string(),
+                total_matches: 3,
+                lines: Vec::new(),
+            },
+        ];
+        let result = SearchResult { total: 3, hits };
+        assert_eq!(
+            result.matched_repos(),
+            vec!["a/repo".to_string(), "b/repo".to_string()]
+        );
+    }
+
+    #[test]
+    fn highlight_returns_original_when_no_matches() {
+        let line = LineMatch {
+            line_number: 1,
+            line: "let x = 1;".to_string(),
+            match_ranges: Vec::new(),
+        };
+        assert_eq!(line.highlight("<", ">"), "let x = 1;");
     }
 }

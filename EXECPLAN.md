@@ -15,6 +15,7 @@ Deliver a Rust SDK and a `gg` CLI that can search millions of GitHub repositorie
 - [x] (2026-01-01 15:30Z) Implement Rust SDK (client, models, parsing, concurrency) and gg CLI.
 - [x] (2026-01-01 15:30Z) Update AGENTS.md and README with repo purpose, usage, and structure.
 - [x] (2026-01-01 15:30Z) Run formatting/tests and record validation artifacts.
+- [ ] (2026-01-01 18:30Z) Add language catalog + CLI command, default grouped output/max-pages updates, matched-repos output, docs/tests updates, and rerun validation.
 
 ## Surprises & Discoveries
 
@@ -26,6 +27,8 @@ Deliver a Rust SDK and a `gg` CLI that can search millions of GitHub repositorie
   Evidence: `curl -s 'https://grep.app/api/search?q=TODO&page=1' | jq -r '.hits.hits[0].total_matches'` returned `100+`.
 - Observation: grep.app snippets include non-matching lines, which can be used for context output.
   Evidence: Snippet parsing now retains non-marked lines for `gg -C` context rendering.
+- Observation: grep.app API responses include a `facets.lang` list of language names; GitHub Linguist provides a superset list that matches these labels.
+  Evidence: `curl -s 'https://grep.app/api/search?q=todo&page=1' | jq -r '.facets.lang.buckets | map(.val)[:8][]'` matches Linguist names (e.g., `Python`, `C++`, `Go`).
 
 ## Decision Log
 
@@ -41,8 +44,12 @@ Deliver a Rust SDK and a `gg` CLI that can search millions of GitHub repositorie
   Rationale: The API snippet format is stable and regex parsing avoided empty-node issues in tests.
   Date/Author: 2026-01-01 / Codex
 
-- Decision: Default CLI searches to case-sensitive (ripgrep-like) and expose `-i/--ignore-case` to toggle.
-  Rationale: Matches ripgrep ergonomics while still allowing API case-insensitive searches when requested.
+- Decision: Use GitHub Linguist language list as the canonical filter values for `--lang`, exposed via `gg langs`.
+  Rationale: grep.app facet values align with Linguist naming; storing the list locally avoids network calls and keeps SDK/CLI deterministic.
+  Date/Author: 2026-01-01 / Codex
+
+- Decision: Default CLI output to grouped headings and `--max-pages 1`, with `--flat` for legacy output format.
+  Rationale: Matches requested defaults while keeping a single-flag opt-out for flat output.
   Date/Author: 2026-01-01 / Codex
 
 - Decision: Implement `--limit` as a CLI output cap (matches + context) while keeping `--max-pages` as an API pagination bound.
