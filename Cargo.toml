@@ -1,0 +1,16 @@
+[package]
+name = "grepapp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+futures = "0.3"
+html-escape = "0.2"
+once_cell = "1.19"
+regex = "1.10"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.36", features = ["macros", "rt-multi-thread", "time"] }
