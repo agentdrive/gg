@@ -15,7 +15,7 @@ Deliver a Rust SDK and a `gg` CLI that can search millions of GitHub repositorie
 - [x] (2026-01-01 15:30Z) Implement Rust SDK (client, models, parsing, concurrency) and gg CLI.
 - [x] (2026-01-01 15:30Z) Update AGENTS.md and README with repo purpose, usage, and structure.
 - [x] (2026-01-01 15:30Z) Run formatting/tests and record validation artifacts.
-- [ ] (2026-01-01 18:30Z) Add language catalog + CLI command, default grouped output/max-pages updates, matched-repos output, docs/tests updates, and rerun validation.
+- [x] (2026-01-01 18:30Z) Add language catalog + CLI command, default grouped output/max-pages updates, matched-repos output, docs/tests updates, and rerun validation.
 
 ## Surprises & Discoveries
 
@@ -116,6 +116,18 @@ Acceptance is met when:
 All steps are additive and safe to re-run. If a build fails after dependency changes, re-run `cargo check` to surface missing imports, then retry `cargo fmt` and `cargo test`. If HTTP calls fail due to network or rate limits, re-run the CLI with `--max-pages 1` to confirm basic functionality.
 
 ## Artifacts and Notes
+
+  cargo test (2026-01-01):
+    running 6 tests
+    test languages::tests::language_list_contains_common_values ... ok
+    test languages::tests::language_lookup_is_exact_match ... ok
+    test models::tests::highlight_returns_original_when_no_matches ... ok
+    test models::tests::matched_repos_returns_sorted_deduped_list ... ok
+    test query::tests::builds_query_pairs_with_filters ... ok
+    test snippet::tests::parses_snippet_with_marks ... ok
+
+  cargo clippy -- -D warnings (2026-01-01):
+    Finished with no warnings.
 
   cargo test (2026-01-01):
     running 2 tests
