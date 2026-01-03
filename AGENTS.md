@@ -57,6 +57,8 @@ Critical files and entrypoints:
 - Add unit tests for parsing and query building in the module where logic lives.
 - Avoid network calls in tests; use fixed HTML/JSON fixtures.
 - Validate changes with `cargo fmt` and `cargo test`.
+- For compiled languages, verification must include a successful build (e.g., `cargo build --release` for Rust).
+- For interpreted languages with typechecking/transpilation, verification must include a successful compile/validation step (e.g., `tsc --noEmit` for TypeScript, `python -m compileall` for Python where applicable).
 - Update `EXECPLAN.md` Progress, Artifacts, and Change notes with each milestone.
 
 ## LEARNINGS + REPEATABLE ACTIONS
