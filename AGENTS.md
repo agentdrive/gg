@@ -68,9 +68,11 @@ Critical files and entrypoints:
 - Always parse snippets into plain text + match ranges before formatting output.
 - Default matching behavior should mirror ripgrep: regex by default with a single explicit literal escape hatch (`-F/--fixed-strings`).
 - Avoid adding compatibility flags unless explicitly requested (require a named downstream consumer and a removal plan).
+- Lock grep.app request semantics with non-network unit tests for query-param mapping (`regexp` vs `words`) when changing query flags/defaults.
 
 ## MISTAKES TO AVOID
 - Don’t assume local file paths: always include repo + path in output.
 - Don’t fetch unbounded pages; use `max_pages` limits.
 - Don’t forget to update `EXECPLAN.md` after changes or validation runs.
 - Don’t add “compatibility” flags preemptively; they expand docs/tests surface area and become long-term maintenance.
+- Don’t accidentally commit agent artifacts; ensure `.codex/` and `.claude/` are gitignored.

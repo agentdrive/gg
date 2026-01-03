@@ -6,6 +6,7 @@ use std::io::{self, IsTerminal};
 use std::process;
 use std::time::Duration;
 
+#[path = "../gg_cli.rs"]
 mod gg_cli;
 use gg_cli::Cli;
 
