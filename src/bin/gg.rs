@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use grepapp::{GrepAppClient, LineMatch, SearchOptions, SearchQuery, languages};
 use serde::Serialize;
 use std::cmp::Ordering;
@@ -6,92 +6,11 @@ use std::io::{self, IsTerminal};
 use std::process;
 use std::time::Duration;
 
+mod gg_cli;
+use gg_cli::Cli;
+
 const MATCH_START: &str = "\u{1b}[32m";
 const MATCH_END: &str = "\u{1b}[0m";
-
-#[derive(Parser, Debug)]
-#[command(name = "gg", version, about = "Grep GitHub via grep.app", long_about = None)]
-struct Cli {
-    #[command(subcommand)]
-    command: Option<Command>,
-
-    /// Pattern to search for
-    pattern: Option<String>,
-
-    /// Treat pattern as a regular expression
-    #[arg(short = 'r', long = "regex", conflicts_with = "word_regexp")]
-    regex: bool,
-
-    /// Match whole words only
-    #[arg(short = 'w', long = "word-regexp")]
-    word_regexp: bool,
-
-    /// Ignore case distinctions
-    #[arg(short = 'i', long = "ignore-case")]
-    ignore_case: bool,
-
-    /// Filter by repository (regex)
-    #[arg(long = "repo")]
-    repo: Option<String>,
-
-    /// Filter by file path (regex)
-    #[arg(long = "path")]
-    path: Option<String>,
-
-    /// Filter by language (repeat or comma-separated). Common values: TypeScript, JavaScript, Python, Rust, C++, C, Zig, C#, JSX, TSX, Swift. Use `gg langs` for the full list.
-    #[arg(long = "lang", value_delimiter = ',')]
-    languages: Vec<String>,
-
-    /// Maximum number of pages to fetch (10 results per page, hard cap 100)
-    #[arg(long = "max-pages", default_value_t = 1)]
-    max_pages: u32,
-
-    /// Maximum concurrent requests
-    #[arg(long = "concurrency", default_value_t = 8)]
-    concurrency: usize,
-
-    /// Request timeout in seconds
-    #[arg(long = "timeout", default_value_t = 20)]
-    timeout_secs: u64,
-
-    /// Emit JSON objects per output line
-    #[arg(long = "json", conflicts_with_all = ["matched_repos", "flat"])]
-    json: bool,
-
-    /// Emit unique repository names that contain matches
-    #[arg(long = "matched-repos", conflicts_with_all = ["json", "flat"])]
-    matched_repos: bool,
-
-    /// Include N lines of context around matches (limited to snippet lines)
-    #[arg(short = 'C', long = "context", default_value_t = 0)]
-    context: usize,
-
-    /// Limit number of output lines (matches + context)
-    #[arg(long = "limit")]
-    limit: Option<usize>,
-
-    /// Disable ANSI colors
-    #[arg(long = "no-color")]
-    no_color: bool,
-
-    /// Group results by repo and file (default).
-    #[arg(long = "heading", default_value_t = true)]
-    heading: bool,
-
-    /// Disable grouped output (flat repo/path:line:content)
-    #[arg(long = "flat", conflicts_with_all = ["json", "matched_repos"])]
-    flat: bool,
-
-    /// Override API base URL (for tests)
-    #[arg(long = "base-url", default_value = "https://grep.app", hide = true)]
-    base_url: String,
-}
-
-#[derive(Subcommand, Debug)]
-enum Command {
-    /// Print available language filter values
-    Langs,
-}
 
 #[derive(Debug)]
 struct MatchRecord {
@@ -117,19 +36,24 @@ struct JsonRecord {
 
 #[tokio::main]
 async fn main() {
-    let cli = Cli::parse();
-
-    if let Some(command) = &cli.command {
-        match command {
-            Command::Langs => {
-                if let Err(err) = print_languages() {
-                    eprintln!("gg: {err}");
-                    process::exit(2);
-                }
-                return;
+    // Preserve `gg langs` behavior while allowing the main parser to remain testable.
+    // (We keep a tiny top-level command enum here rather than complicating the shared CLI struct.)
+    let args: Vec<std::ffi::OsString> = std::env::args_os().collect();
+    if args.len() >= 2 && args[1] == "langs" {
+        let langs = match languages() {
+            Ok(l) => l,
+            Err(err) => {
+                eprintln!("error: {err}");
+                process::exit(1);
             }
+        };
+        for lang in langs {
+            println!("{lang}");
         }
+        return;
     }
+
+    let cli = Cli::parse();
 
     let pattern = match cli.pattern.as_deref() {
         Some(pattern) => pattern,
@@ -202,9 +126,11 @@ async fn main() {
 
 fn build_query(cli: &Cli, pattern: &str) -> SearchQuery {
     let mut query = SearchQuery::new(pattern)
-        .regex(cli.regex)
         .whole_words(cli.word_regexp)
         .case_sensitive(!cli.ignore_case);
+    if cli.fixed_strings {
+        query = query.regex(false);
+    }
     if let Some(repo) = &cli.repo {
         query = query.repo_filter(repo);
     }
@@ -341,12 +267,4 @@ fn render_line(record: &MatchRecord, start: &str, end: &str) -> String {
         match_ranges: record.match_ranges.clone(),
     };
     line_match.highlight(start, end)
-}
-
-fn print_languages() -> Result<(), grepapp::GrepAppError> {
-    let langs = languages()?;
-    for lang in langs {
-        println!("{lang}");
-    }
-    Ok(())
 }

@@ -66,8 +66,11 @@ Critical files and entrypoints:
 - Snippets include non-matching lines; parse them so CLI can provide context output.
 - `total_matches` arrives as a string and may include a trailing `+` (e.g., `100+`).
 - Always parse snippets into plain text + match ranges before formatting output.
+- Default matching behavior should mirror ripgrep: regex by default with a single explicit literal escape hatch (`-F/--fixed-strings`).
+- Avoid adding compatibility flags unless explicitly requested (require a named downstream consumer and a removal plan).
 
 ## MISTAKES TO AVOID
 - Don’t assume local file paths: always include repo + path in output.
 - Don’t fetch unbounded pages; use `max_pages` limits.
 - Don’t forget to update `EXECPLAN.md` after changes or validation runs.
+- Don’t add “compatibility” flags preemptively; they expand docs/tests surface area and become long-term maintenance.

@@ -10,10 +10,7 @@ pub fn languages() -> Result<&'static [String], GrepAppError> {
     }
     let languages: Vec<String> = serde_json::from_str(LANGUAGES_JSON)?;
     let _ = LANGUAGES.set(languages);
-    Ok(LANGUAGES
-        .get()
-        .expect("languages set")
-        .as_slice())
+    Ok(LANGUAGES.get().expect("languages set").as_slice())
 }
 
 pub fn is_language_supported(name: &str) -> Result<bool, GrepAppError> {

@@ -15,7 +15,7 @@ impl SearchQuery {
     pub fn new(pattern: impl Into<String>) -> Self {
         Self {
             pattern: pattern.into(),
-            regex: false,
+            regex: true,
             whole_words: false,
             case_sensitive: false,
             repo_filter: None,
@@ -128,7 +128,6 @@ mod tests {
     #[test]
     fn builds_query_pairs_with_filters() {
         let query = SearchQuery::new("todo")
-            .regex(true)
             .case_sensitive(true)
             .repo_filter("rust-lang/.*")
             .path_filter("src/.*")
@@ -142,5 +141,27 @@ mod tests {
         assert!(pairs.contains(&("f.path.pattern".to_string(), "src/.*".to_string())));
         assert!(pairs.contains(&("f.lang".to_string(), "Rust".to_string())));
         assert!(pairs.contains(&("f.lang".to_string(), "Go".to_string())));
+    }
+
+    #[test]
+    fn default_query_is_regex() {
+        let query = SearchQuery::new("todo");
+        let pairs = query.to_query_pairs();
+        assert!(pairs.contains(&("regexp".to_string(), "true".to_string())));
+    }
+
+    #[test]
+    fn regex_false_does_not_set_regexp_param() {
+        let query = SearchQuery::new("a.b").regex(false);
+        let pairs = query.to_query_pairs();
+        assert!(!pairs.contains(&("regexp".to_string(), "true".to_string())));
+    }
+
+    #[test]
+    fn whole_words_sets_words_param_only_when_not_regex() {
+        let query = SearchQuery::new("todo").regex(false).whole_words(true);
+        let pairs = query.to_query_pairs();
+        assert!(pairs.contains(&("words".to_string(), "true".to_string())));
+        assert!(!pairs.contains(&("regexp".to_string(), "true".to_string())));
     }
 }

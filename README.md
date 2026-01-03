@@ -16,8 +16,11 @@ Common options:
 # Print supported language names
 cargo run --bin gg -- langs
 
-# Regex search
-cargo run --bin gg -- "serde_json::from_str" -r --max-pages 2
+# Regex search (default)
+cargo run --bin gg -- "serde_json::from_str" --max-pages 2
+
+# Literal search (escape hatch, like `rg -F`)
+cargo run --bin gg -- -F "ratatui.*(spawn|process)" --lang Rust --max-pages 2
 
 # Repo + path filters
 cargo run --bin gg -- "TODO" --repo "rust-lang/.*" --path "src/.*"
@@ -86,3 +89,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - Each API page returns up to 10 hits; `--max-pages` defaults to 1 and is capped at 100.
 - Match highlighting is derived from `grep.app` snippet HTML and rendered locally.
 - The CLI defaults to grouped output (`--heading`) for easier scanning.
+- Patterns are treated as regular expressions by default; use `-F/--fixed-strings` for literal matching.

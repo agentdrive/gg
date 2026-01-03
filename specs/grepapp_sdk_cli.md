@@ -9,6 +9,7 @@ Provide a Rust SDK and a `gg` CLI that use the public `https://grep.app/api/sear
 - The API endpoint is `https://grep.app/api/search` and accepts query parameters such as `q`, `page`, `regexp`, `words`, `case`, `f.repo.pattern`, `f.path.pattern`, and `f.lang`.
 - A single page returns up to 10 hits.
 - The API returns HTML snippets with `<mark>` tags around matches and line numbers inside `div.lineno`.
+- The CLI treats patterns as regular expressions by default (ripgrep-like). Use `-F/--fixed-strings` for literal matching.
 
 ## Acceptance Criteria
 

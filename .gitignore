@@ -19,3 +19,7 @@ Cargo.lock
 
 # OS
 Thumbs.db
+
+# Agent artifacts (local)
+.codex/
+.claude/

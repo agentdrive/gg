@@ -64,6 +64,10 @@ Deliver a Rust SDK and a `gg` CLI that can search millions of GitHub repositorie
 
 Delivered a Rust SDK and `gg` CLI backed by the grep.app API, with concurrent page fetching, snippet parsing, and ripgrep-like output. Added specs, docs, and tests; `cargo fmt` and `cargo test` complete cleanly. Remaining work is optional polish (e.g., richer output formatting or retry policy tweaks).
 
+---
+
+Change note (2026-01-03): Switched SDK + CLI default matching semantics to ripgrep-like behavior: patterns are treated as regex by default, with `-F/--fixed-strings` as the explicit literal escape hatch. Added unit tests to lock query-param mapping (`regexp` vs `words`) and clap conflicts; updated docs accordingly and validated with `cargo fmt` + `cargo test`.
+
 ## Context and Orientation
 
 The repository now contains a Rust library crate (`Cargo.toml`, `src/lib.rs`) plus the SDK and CLI implementation:
