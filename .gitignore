@@ -1,0 +1,65 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo
+# Note: Cargo.lock is kept for binaries/applications, ignored for libraries
+# Cargo.lock
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# IDE - IntelliJ / CLion
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# IDE - RustRover
+.rustrover/
+
+# IDE - Vim
+*.swp
+*.swo
+*~
+
+# IDE - Emacs
+*~
+\#*\#
+.\#*
+
+# OS - macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# OS - Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# OS - Linux
+*~
+.directory
+.Trash-*
+
+# Debugging
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Backup files
+*.bak
+*.tmp
+
+# Local configuration and cache
+# Add any project-specific cache/config directories here
+# e.g., if your app creates local cache directories:
+# .cache/
+# .config/

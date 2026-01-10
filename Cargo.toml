@@ -1,0 +1,31 @@
+[package]
+name = "gg"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Filesystem-like interface to the web: cache webpages as Markdown and run host commands against them."
+
+[dependencies]
+anyhow = "1"
+blake3 = "1"
+bytes = "1"
+directories = "5"
+flate2 = "1"
+futures-util = "0.3"
+hex = "0.4"
+html-to-markdown-rs = { version = "2.20.0", features = ["metadata", "visitor"] }
+quick-xml = "0.37"
+regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli", "deflate", "stream"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+url = "2"
+
+[dev-dependencies]
+criterion = "0.5"
+pretty_assertions = "1"
+
+[[bench]]
+name = "gg_bench"
+harness = false
